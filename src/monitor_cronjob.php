@@ -216,6 +216,17 @@ class MonitorCronjob
     }
 }
 
+call_user_func(function () {
+    $flock = fopen(__FILE__, "rb");
+    if (! flock($flock, LOCK_EX | LOCK_NB)) {
+        throw new \RuntimeException("unable to get flock - possibly running twice?");
+    }
+    register_shutdown_function(function () use (&$flock) {
+        flock($flock, LOCK_UN);
+        fclose($flock);
+    });
+});
+
 $monitor = new MonitorCronjob();
 // 5 minutes
 $updateSleep = 5 * 60;
